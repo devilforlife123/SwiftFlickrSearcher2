@@ -18,7 +18,7 @@ class CarouselLayout:UICollectionViewFlowLayout{
         super.init(coder: aDecoder)
         scrollDirection = UICollectionViewScrollDirection.Horizontal
         itemSize = CGSizeMake(photoWidth, photoHeight)
-        minimumInteritemSpacing = 10
+        minimumInteritemSpacing = 0
     }
     
     override func prepareLayout() {
@@ -35,8 +35,6 @@ class CarouselLayout:UICollectionViewFlowLayout{
             
             let frame = attributes.frame
             let distance = abs(collectionView!.contentOffset.x + collectionView!.contentInset.left - frame.origin.x)
-            //if distance is 0 then the scale is 1
-            //The distance is zero when the contentInset + contentoffset.x  == frame.origin.x
             let scale = min(max(0.7, 1-distance/self.collectionView!.bounds.width), 1.0)
             attributes.transform = CGAffineTransformMakeScale(scale, scale)
         }
@@ -50,27 +48,72 @@ class CarouselLayout:UICollectionViewFlowLayout{
     
     override func targetContentOffsetForProposedContentOffset(proposedContentOffset: CGPoint, withScrollingVelocity velocity: CGPoint) -> CGPoint {
         
-        //Proposed point where the collectionView should snap to
-        var newOffset = CGPoint()
-        
-        let layout = collectionView?.collectionViewLayout as! UICollectionViewFlowLayout
-        let width = layout.itemSize.width + layout.minimumInteritemSpacing
-        var offset = proposedContentOffset.x + collectionView!.contentInset.left
-        if velocity.x > 0{
-            offset = offset * ceil(offset/width)
+        if let cv = self.collectionView {
+            
+            let cvBounds = cv.bounds
+            let halfWidth = cvBounds.size.width * 0.5;
+            let proposedContentOffsetCenterX = proposedContentOffset.x + halfWidth
+            
+            if let attributesForVisibleCells = self.layoutAttributesForElementsInRect(cvBounds) {
+                
+                var candidateAttributes : UICollectionViewLayoutAttributes?
+                for attributes in attributesForVisibleCells {
+                    
+                    // == Skip comparison with non-cell items (headers and footers) == //
+                    if attributes.representedElementCategory != UICollectionElementCategory.Cell {
+                        continue
+                    }
+                    
+                    if let candAttrs = candidateAttributes {
+                        
+                        let a = attributes.center.x - proposedContentOffsetCenterX
+                        let b = candAttrs.center.x - proposedContentOffsetCenterX
+                        
+                        if fabsf(Float(a)) < fabsf(Float(b)) {
+                            candidateAttributes = attributes;
+                        }
+                        
+                    }
+                    else { // == First time in the loop == //
+                        
+                        candidateAttributes = attributes;
+                        continue;
+                    }
+                    
+                    
+                }
+                
+                return CGPoint(x : candidateAttributes!.center.x - halfWidth, y : proposedContentOffset.y);
+                
+            }
+            
         }
         
-        if velocity.x == 0{
-            offset = offset * round(offset/width)
-        }
-        
-        if velocity.x < 0{
-            offset = offset * floor(offset/width)
-        }
-        
-        newOffset.x = offset - collectionView!.contentInset.left
-        newOffset.y = proposedContentOffset.y
-        
-        return newOffset
+        // Fallback
+        return super.targetContentOffsetForProposedContentOffset(proposedContentOffset)
     }
+        
+//        //Proposed point where the collectionView should snap to
+//        var newOffset = CGPoint()
+//        
+//        let layout = collectionView?.collectionViewLayout as! UICollectionViewFlowLayout
+//        let width = layout.itemSize.width + layout.minimumInteritemSpacing
+//        var offset = proposedContentOffset.x + collectionView!.contentInset.left
+//        if velocity.x > 0{
+//            offset = offset * ceil(offset/width)
+//        }
+//        
+//        if velocity.x == 0{
+//            offset = offset * round(offset/width)
+//        }
+//        
+//        if velocity.x < 0{
+//            offset = offset * floor(offset/width)
+//        }
+//        
+//        newOffset.x = offset - collectionView!.contentInset.left
+//        newOffset.y = proposedContentOffset.y
+//        
+//        return newOffset
+    //}
 }
