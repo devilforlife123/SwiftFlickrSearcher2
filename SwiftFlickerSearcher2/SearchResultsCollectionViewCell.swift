@@ -19,14 +19,21 @@ class SearchResultsCollectionViewCell:UICollectionViewCell{
     
     var flickrPhoto:Photo?{
         didSet{
-            if let flickrPhoto = flickrPhoto{
+            if let flickrPhoto = self.flickrPhoto{
                 if flickrPhoto.isFavorite{
-                    heartButton.tintColor = UIColor(red:1, green:0, blue:0.517, alpha:1)
+                    self.heartButton.tintColor = UIColor(red:1, green:0, blue:0.517, alpha:1)
                 }else{
-                    heartButton.tintColor = UIColor.whiteColor()
+                    self.heartButton.tintColor = UIColor.whiteColor()
                 }
             }
         }
+    }
+    
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        self.imageView.image = nil
+        self.imageView.setNeedsDisplay()
+        self.setNeedsDisplay()
     }
     
     @IBAction func heartTapped(sender:AnyObject!){

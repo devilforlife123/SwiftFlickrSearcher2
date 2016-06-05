@@ -38,7 +38,7 @@ class SearchResultsViewController:UIViewController{
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == revealDetails{
-            selectedCellRect = sender!.frame 
+            selectedCellRect = sender!.frame
             let destinationViewController = segue.destinationViewController as! PhotoDetailViewController
             destinationViewController.transitioningDelegate = self
             destinationViewController.descriptionText = (sender as! SearchResultsCollectionViewCell).flickrPhoto?.title
@@ -67,22 +67,19 @@ extension SearchResultsViewController:UICollectionViewDataSource{
                     strongSelf.collectionView.reloadItemsAtIndexPaths([indexPath])
                 }
             }
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), {
+            
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), {
+                
                 cell.flickrPhoto?.loadThumbnail(false, completion: { (image, error) in
                     if let image = image{
-                        dispatch_sync(dispatch_get_main_queue(), {
-                            let leftCorners:UIRectCorner = [.TopLeft,.BottomLeft]
-                            let rightCorners:UIRectCorner = [.TopRight,.BottomRight]
-                            
-                            let newImage = image.imageByScalingAndCroppingForSize(image.size).imageWithRoundedCornersSize(20, corners: leftCorners).imageWithRoundedCornersSize(20, corners: rightCorners)
+                       dispatch_sync(dispatch_get_main_queue(), {
+                        
+                        let leftCorners:UIRectCorner = [.TopLeft,.BottomLeft]
+                        let rightCorners:UIRectCorner = [.TopRight,.BottomRight]
+                        let newImage = image.imageByScalingAndCroppingForSize(image.size).imageWithRoundedCornersSize(20, corners: leftCorners).imageWithRoundedCornersSize(20, corners: rightCorners)
+                        
                             cell.imageView.image = newImage
-                        })
-                    }else{
-                        
-                        let alert = UIAlertController(title: "Image Error", message: error!.localizedDescription, preferredStyle: .Alert)
-                        alert.addAction(UIAlertAction(title: "Dismiss", style: .Cancel, handler: nil))
-                        
-                        self.presentViewController(alert, animated: true, completion: nil)
+                       })
                     }
                 })
             })
