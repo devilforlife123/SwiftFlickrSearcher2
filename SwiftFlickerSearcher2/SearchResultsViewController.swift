@@ -16,16 +16,15 @@ class SearchResultsViewController:UIViewController{
     
     @IBOutlet weak var collectionView:UICollectionView!
     var searchResults:FlickrSearchResults?
-    
+    var selectedCellRect:CGRect = CGRectZero
     
     private let flipPresentAnimationController = FlipPresentAnimationController()
     private let flipDismissAnimationController = FlipDismissAnimationController()
     
     
     var collectionViewCellFrame:CGRect{
-        
-        let attributes: UICollectionViewLayoutAttributes = self.collectionView.layoutAttributesForItemAtIndexPath(NSIndexPath(forItem: 0, inSection: 0))!
-        return attributes.frame
+        let cellFromSuperView = collectionView.convertRect(selectedCellRect, toView: collectionView.superview)
+        return cellFromSuperView
     }
     
     override func viewDidAppear(animated: Bool) {
@@ -39,6 +38,7 @@ class SearchResultsViewController:UIViewController{
     
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == revealDetails{
+            selectedCellRect = sender!.frame 
             let destinationViewController = segue.destinationViewController as! PhotoDetailViewController
             destinationViewController.transitioningDelegate = self
             destinationViewController.descriptionText = (sender as! SearchResultsCollectionViewCell).flickrPhoto?.title
